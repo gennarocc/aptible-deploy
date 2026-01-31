@@ -23,7 +23,7 @@ data "aptible_stack" "main" {
 resource "aptible_environment" "main" {
   stack_id = data.aptible_stack.main.stack_id
   org_id   = var.aptible_org_id
-  handle   = "aptible-deploy-main"
+  handle   = "aptible-deploy"
 }
 
 resource "aptible_app" "app" {

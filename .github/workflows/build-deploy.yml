@@ -14,10 +14,10 @@ jobs:
             dockerfile: frontend/Dockerfile
             ecr_repository: frontend
             app_handle: frontend
-          - name: backend
-            dockerfile: backend/Dockerfile
-            ecr_repository: backend
-            app_handle: backend
+          # - name: backend
+          #   dockerfile: backend/Dockerfile
+          #   ecr_repository: backend
+          #   app_handle: backend
     
     env:
       MAJOR_VERSION: "1"
