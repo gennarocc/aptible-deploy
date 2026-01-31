@@ -7,7 +7,6 @@ terraform {
     }
   }
 }
-
 provider "aptible" {
 }
 
@@ -25,11 +24,10 @@ resource "aptible_environment" "main" {
 
 # Create the frontend app
 resource "aptible_app" "frontend" {
-  env_id = data.aptible_environment.main.env_id
+  env_id = aptible_environment.main.env_id
   handle = "frontend"
   
   config = {
-    # Required for Direct Docker Image Deployment
     "APTIBLE_DOCKER_IMAGE" = "943818144040.dkr.ecr.us-east-2.amazonaws.com/frontend:latest"
     "APTIBLE_PRIVATE_REGISTRY_USERNAME" = "AWS"
     "APTIBLE_PRIVATE_REGISTRY_PASSWORD" = var.ecr_password

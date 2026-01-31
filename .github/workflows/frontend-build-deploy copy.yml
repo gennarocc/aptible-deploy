@@ -59,9 +59,18 @@ jobs:
 
       - name: Terraform Init
         run: terraform init
+        env:
+          APTIBLE_USERNAME: ${{ secrets.APTIBLE_USERNAME }}
+          APTIBLE_PASSWORD: ${{ secrets.APTIBLE_PASSWORD }}
       
       - name: Terraform Plan
         run: terraform plan -var="ecr_password=${{ steps.ecr-password.outputs.ecr_password }}"
-      
+        env:
+          APTIBLE_USERNAME: ${{ secrets.APTIBLE_USERNAME }}
+          APTIBLE_PASSWORD: ${{ secrets.APTIBLE_PASSWORD }} 
+
       - name: Terraform Apply
         run: terraform apply -auto-approve -var="ecr_password=${{ steps.ecr-password.outputs.ecr_password }}"
+        env:
+          APTIBLE_USERNAME: ${{ secrets.APTIBLE_USERNAME }}
+          APTIBLE_PASSWORD: ${{ secrets.APTIBLE_PASSWORD }}
