@@ -1,10 +1,14 @@
-# Configure the Aptible provider
 terraform {
   required_providers {
     aptible = {
       source  = "aptible/aptible"
       version = "~> 0.8.0"
     }
+  }
+  backend "s3" {
+    bucket = "aptible-deploy-bucket"
+    key = "terraform.tfstate"
+    region = "us-east-2"
   }
 }
 
@@ -16,15 +20,27 @@ data "aptible_stack" "main" {
   name = "shared-us-east-1-teal"
 }
 
-# Reference existing environment
-data "aptible_environment" "main" {
-  handle = "aptible-deploy-main"
+resource "aptible_environment" "main" {
+  stack_id = data.aptible_stack.main.stack_id
+  org_id   = var.aptible_org_id
+  handle   = "aptible-deploy-main"
 }
 
-# Reference existing app instead of creating it
-data "aptible_app" "app" {
-  env_id = data.aptible_environment.main.env_id
+resource "aptible_app" "app" {
+  env_id = aptible_environment.main.env_id
   handle = var.app_handle
+  
+  config = {
+    "APTIBLE_DOCKER_IMAGE" = "${var.aws_account_id}.dkr.ecr.${var.aws_region}.amazonaws.com/${var.ecr_repository}:latest"
+    "APTIBLE_PRIVATE_REGISTRY_USERNAME" = "AWS"
+    "APTIBLE_PRIVATE_REGISTRY_PASSWORD" = var.ecr_password
+  }
+  
+  service {
+    process_type           = "cmd"
+    container_count        = 1
+    container_memory_limit = 1024
+  }
 }
 
 # Variables
