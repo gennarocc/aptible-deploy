@@ -56,6 +56,13 @@ jobs:
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: "1.6.0"
+      
+      - name: Terraform Init
+        run: terraform init -upgrade
+        env:
+          APTIBLE_USERNAME: ${{ secrets.APTIBLE_USERNAME }}
+          APTIBLE_PASSWORD: ${{ secrets.APTIBLE_PASSWORD }}
+     
       - name: Terraform Plan
         run: |
           terraform plan \
