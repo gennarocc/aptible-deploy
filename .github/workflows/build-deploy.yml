@@ -1,4 +1,4 @@
-name: Build and Deploy 
+name: Build and Deploy Frontend
 on:
   push:
     branches:
@@ -7,22 +7,13 @@ on:
 jobs:
   build-deploy:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        service:
-          - name: frontend
-            dockerfile: frontend/Dockerfile
-            ecr_repository: frontend
-            app_handle: frontend
-          # - name: backend
-          #   dockerfile: backend/Dockerfile
-          #   ecr_repository: backend
-          #   app_handle: backend
     
     env:
       MAJOR_VERSION: "1"
       AWS_ACCOUNT_ID: "943818144040"
-      AWS_REGION_ECR: "us-east-2"
+      AWS_REGION: "us-east-2"
+      APP_HANDLE: "frontend"
+      ECR_REPOSITORY: "frontend"
     
     steps:
       - name: Checkout repo
@@ -38,32 +29,32 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          aws-region: ${{ env.AWS_REGION }}
       
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
       
-      - name: Build Docker image for ${{ matrix.service.name }}
+      - name: Build Docker image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         run: |
-          docker build -f ${{ matrix.service.dockerfile }} \
-            -t $ECR_REGISTRY/${{ matrix.service.ecr_repository }}:${{ env.VERSION }} \
-            -t $ECR_REGISTRY/${{ matrix.service.ecr_repository }}:latest \
+          docker build -f frontend/Dockerfile \
+            -t $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:${{ env.VERSION }} \
+            -t $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:latest \
             .
       
       - name: Push to Amazon ECR
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         run: |
-          docker push $ECR_REGISTRY/${{ matrix.service.ecr_repository }}:${{ env.VERSION }}
-          docker push $ECR_REGISTRY/${{ matrix.service.ecr_repository }}:latest
+          docker push $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:${{ env.VERSION }}
+          docker push $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:latest
       
       - name: Get ECR password for Aptible
         id: ecr-password
         run: |
-          ECR_PASSWORD=$(aws ecr get-login-password --region ${{ secrets.AWS_REGION }})
+          ECR_PASSWORD=$(aws ecr get-login-password --region ${{ env.AWS_REGION }})
           echo "::add-mask::$ECR_PASSWORD"
           echo "ecr_password=$ECR_PASSWORD" >> $GITHUB_OUTPUT
       
@@ -72,34 +63,34 @@ jobs:
         with:
           terraform_version: "1.6.0"
       
-      - name: Terraform Init for ${{ matrix.service.name }}
-        run: terraform init -upgrade
+      - name: Terraform Init
+        run: terraform init -backend-config="key=terraform-frontend.tfstate"
         env:
           APTIBLE_USERNAME: ${{ secrets.APTIBLE_USERNAME }}
           APTIBLE_PASSWORD: ${{ secrets.APTIBLE_PASSWORD }}
      
-      - name: Terraform Plan for ${{ matrix.service.name }}
+      - name: Terraform Plan
         run: |
           terraform plan \
             -var="ecr_password=${{ steps.ecr-password.outputs.ecr_password }}" \
             -var="aptible_org_id=${{ secrets.APTIBLE_ORG_ID }}" \
-            -var="app_handle=${{ matrix.service.app_handle }}" \
-            -var="ecr_repository=${{ matrix.service.ecr_repository }}" \
+            -var="app_handle=${{ env.APP_HANDLE }}" \
+            -var="ecr_repository=${{ env.ECR_REPOSITORY }}" \
             -var="aws_account_id=${{ env.AWS_ACCOUNT_ID }}" \
-            -var="aws_region=${{ env.AWS_REGION_ECR }}"
+            -var="aws_region=${{ env.AWS_REGION }}"
         env:
           APTIBLE_USERNAME: ${{ secrets.APTIBLE_USERNAME }}
           APTIBLE_PASSWORD: ${{ secrets.APTIBLE_PASSWORD }}
       
-      - name: Terraform Apply for ${{ matrix.service.name }}
+      - name: Terraform Apply
         run: |
           terraform apply -auto-approve \
             -var="ecr_password=${{ steps.ecr-password.outputs.ecr_password }}" \
             -var="aptible_org_id=${{ secrets.APTIBLE_ORG_ID }}" \
-            -var="app_handle=${{ matrix.service.app_handle }}" \
-            -var="ecr_repository=${{ matrix.service.ecr_repository }}" \
+            -var="app_handle=${{ env.APP_HANDLE }}" \
+            -var="ecr_repository=${{ env.ECR_REPOSITORY }}" \
             -var="aws_account_id=${{ env.AWS_ACCOUNT_ID }}" \
-            -var="aws_region=${{ env.AWS_REGION_ECR }}"
+            -var="aws_region=${{ env.AWS_REGION }}"
         env:
           APTIBLE_USERNAME: ${{ secrets.APTIBLE_USERNAME }}
           APTIBLE_PASSWORD: ${{ secrets.APTIBLE_PASSWORD }}

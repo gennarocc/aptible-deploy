@@ -7,8 +7,8 @@ terraform {
   }
   backend "s3" {
     bucket = "aptible-deploy-bucket"
-    key = "terraform.tfstate"
     region = "us-east-2"
+    dynamodb_table = "terraform-state"
   }
 }
 
@@ -20,12 +20,14 @@ data "aptible_stack" "main" {
   name = "shared-us-east-1-teal"
 }
 
+# Environment
 resource "aptible_environment" "main" {
   stack_id = data.aptible_stack.main.stack_id
   org_id   = var.aptible_org_id
   handle   = "aptible-deploy"
 }
 
+# Frontend App
 resource "aptible_app" "app" {
   env_id = aptible_environment.main.env_id
   handle = var.app_handle
@@ -56,7 +58,7 @@ variable "aptible_org_id" {
 }
 
 variable "app_handle" {
-  description = "App handle (frontend or backend)"
+  description = "App handle (frontend)"
   type        = string
 }
 
