@@ -56,21 +56,20 @@ jobs:
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: "1.6.0"
-
-      - name: Terraform Init
-        run: terraform init
+      - name: Terraform Plan
+        run: |
+          terraform plan \
+            -var="ecr_password=${{ steps.ecr-password.outputs.ecr_password }}" \
+            -var="aptible_org_id=${{ secrets.APTIBLE_ORG_ID }}"
         env:
           APTIBLE_USERNAME: ${{ secrets.APTIBLE_USERNAME }}
           APTIBLE_PASSWORD: ${{ secrets.APTIBLE_PASSWORD }}
-      
-      - name: Terraform Plan
-        run: terraform plan -var="ecr_password=${{ steps.ecr-password.outputs.ecr_password }}"
-        env:
-          APTIBLE_USERNAME: ${{ secrets.APTIBLE_USERNAME }}
-          APTIBLE_PASSWORD: ${{ secrets.APTIBLE_PASSWORD }} 
 
       - name: Terraform Apply
-        run: terraform apply -auto-approve -var="ecr_password=${{ steps.ecr-password.outputs.ecr_password }}"
+        run: |
+          terraform apply -auto-approve \
+            -var="ecr_password=${{ steps.ecr-password.outputs.ecr_password }}" \
+            -var="aptible_org_id=${{ secrets.APTIBLE_ORG_ID }}"
         env:
           APTIBLE_USERNAME: ${{ secrets.APTIBLE_USERNAME }}
           APTIBLE_PASSWORD: ${{ secrets.APTIBLE_PASSWORD }}

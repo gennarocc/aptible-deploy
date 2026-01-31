@@ -18,7 +18,7 @@ data "aptible_stack" "main" {
 # Environment - create resource if it doesn't exist
 resource "aptible_environment" "main" {
   stack_id = data.aptible_stack.main.stack_id
-  org_id   = data.aptible_stack.main.org_id
+  org_id   = var.aptible_org_id
   handle   = "gennaro-test"
 }
 
@@ -44,4 +44,10 @@ variable "ecr_password" {
   description = "ECR authentication token"
   type        = string
   sensitive   = true
+}
+
+
+variable "aptible_org_id" {
+  description = "Aptible Organization ID (UUID)"
+  type        = string
 }
