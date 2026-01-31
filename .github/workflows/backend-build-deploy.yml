@@ -1,0 +1,67 @@
+name: Backend Build Deploy
+on:
+  push:
+    branches:
+      - none
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      MAJOR_VERSION: "1"
+      ECR_REPOSITORY: backend
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+      
+      - name: Get version number
+        run: |
+          VERSION="${{ env.MAJOR_VERSION }}.${{ github.run_number }}"
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+        
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+      
+      - name: Build Docker image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          docker build -f backend/Dockerfile \
+            -t $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:${{ env.VERSION }} \
+            -t $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:latest \
+            .
+      
+      - name: Push to Amazon ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          docker push $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:${{ env.VERSION }}
+          docker push $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:latest
+
+      - name: Get ECR password for Aptible
+        id: ecr-password
+        run: |
+          ECR_PASSWORD=$(aws ecr get-login-password --region ${{ secrets.AWS_REGION }})
+          echo "::add-mask::$ECR_PASSWORD"
+          echo "ecr_password=$ECR_PASSWORD" >> $GITHUB_OUTPUT
+      
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.6.0"
+
+      - name: Terraform Init
+        run: terraform init
+      
+      - name: Terraform Plan
+        run: terraform plan -var="ecr_password=${{ steps.ecr-password.outputs.ecr_password }}"
+      
+      - name: Terraform Apply
+        run: terraform apply -auto-approve -var="ecr_password=${{ steps.ecr-password.outputs.ecr_password }}"

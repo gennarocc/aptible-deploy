@@ -44,3 +44,24 @@ jobs:
         run: |
           docker push $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:${{ env.VERSION }}
           docker push $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:latest
+
+      - name: Get ECR password for Aptible
+        id: ecr-password
+        run: |
+          ECR_PASSWORD=$(aws ecr get-login-password --region ${{ secrets.AWS_REGION }})
+          echo "::add-mask::$ECR_PASSWORD"
+          echo "ecr_password=$ECR_PASSWORD" >> $GITHUB_OUTPUT
+      
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.6.0"
+
+      - name: Terraform Init
+        run: terraform init
+      
+      - name: Terraform Plan
+        run: terraform plan -var="ecr_password=${{ steps.ecr-password.outputs.ecr_password }}"
+      
+      - name: Terraform Apply
+        run: terraform apply -auto-approve -var="ecr_password=${{ steps.ecr-password.outputs.ecr_password }}"
