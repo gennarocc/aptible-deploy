@@ -7,6 +7,7 @@ terraform {
     }
   }
 }
+
 provider "aptible" {
 }
 
@@ -22,13 +23,13 @@ resource "aptible_environment" "main" {
   handle   = "aptible-deploy-main"
 }
 
-# Create the frontend app
-resource "aptible_app" "frontend" {
+# Create the app (frontend or backend based on variable)
+resource "aptible_app" "app" {
   env_id = aptible_environment.main.env_id
-  handle = "frontend"
+  handle = var.app_handle
   
   config = {
-    "APTIBLE_DOCKER_IMAGE" = "943818144040.dkr.ecr.us-east-2.amazonaws.com/frontend:latest"
+    "APTIBLE_DOCKER_IMAGE" = "${var.aws_account_id}.dkr.ecr.${var.aws_region}.amazonaws.com/${var.ecr_repository}:latest"
     "APTIBLE_PRIVATE_REGISTRY_USERNAME" = "AWS"
     "APTIBLE_PRIVATE_REGISTRY_PASSWORD" = var.ecr_password
   }
@@ -40,14 +41,34 @@ resource "aptible_app" "frontend" {
   }
 }
 
+# Variables
 variable "ecr_password" {
   description = "ECR authentication token"
   type        = string
   sensitive   = true
 }
 
-
 variable "aptible_org_id" {
   description = "Aptible Organization ID (UUID)"
+  type        = string
+}
+
+variable "app_handle" {
+  description = "App handle (frontend or backend)"
+  type        = string
+}
+
+variable "ecr_repository" {
+  description = "ECR repository name"
+  type        = string
+}
+
+variable "aws_account_id" {
+  description = "AWS Account ID"
+  type        = string
+}
+
+variable "aws_region" {
+  description = "AWS Region for ECR"
   type        = string
 }
