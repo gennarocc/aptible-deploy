@@ -19,7 +19,7 @@ data "aptible_stack" "main" {
 resource "aptible_environment" "main" {
   stack_id = data.aptible_stack.main.stack_id
   org_id   = var.aptible_org_id
-  handle   = "gennaro-test"
+  handle   = "aptible-deploy-main"
 }
 
 # Create the frontend app
