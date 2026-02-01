@@ -9,6 +9,7 @@ The main build file can be found in `.github/workflows/build-deploy.yml`. The bu
 Builds the frontend Docker image and pushes it to the AWS ECR.
 
 2. `build-backend`
+3. 
 Builds the backend Docker image and pushes it to the AWS ECR.
 
 4. `deploy`
@@ -38,3 +39,4 @@ Defines a private S3 bucket (private by default) called `gennaro-documents` ("st
 ## Secrets
 
 All secrets are managed via Github's repository secrets and are accessed via `${{secrets.SECRET_NAME}}` in the Github Action.
+
