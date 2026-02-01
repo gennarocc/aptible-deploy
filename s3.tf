@@ -1,5 +1,5 @@
 resource "aws_s3_bucket" "stride_documents" {
-  bucket = "stride-documents"
+  bucket = "gennaros-documents"
 }
 
 resource "aws_s3_bucket_policy" "stride_documents_policy" {
