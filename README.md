@@ -9,10 +9,10 @@ The main build file can be found in `.github/workflows/build-deploy.yml`. The bu
 Builds the frontend Docker image and pushes it to the AWS ECR.
 
 2. `build-backend`
-3. 
+
 Builds the backend Docker image and pushes it to the AWS ECR.
 
-4. `deploy`
+3. `deploy`
 
 Applys the existing terraform config to deploy the latest docker images to the application. This job requires the first two to finish before it can begin.
 
@@ -24,7 +24,7 @@ The workflow has a globaly defined major version for both frontend and backend. 
 
 The terraform configuration is split into three segments
 
-1. `terraform.fs`
+1. `terraform.tf`
 
 Defines all providers and variables needed to provision a deployment. Uses an S3 state "backend" to manage the terraform state remotely and a dynamodb_table to manage the state lock.
 
