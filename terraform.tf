@@ -13,7 +13,6 @@ terraform {
     bucket = "aptible-deploy-bucket"
     region = "us-east-2"
     dynamodb_table = "terraform-state"
-    # key is set via -backend-config in workflow
   }
 }
 
