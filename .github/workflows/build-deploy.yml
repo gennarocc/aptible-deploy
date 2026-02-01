@@ -1,18 +1,16 @@
-name: Build and Deploy Frontend
+name: Build and Deploy Frontend and Backend
 on:
   push:
     branches:
       - master
 
 jobs:
-  build-deploy:
+  build-frontend:
     runs-on: ubuntu-latest
     
     env:
       MAJOR_VERSION: "1"
-      AWS_ACCOUNT_ID: "943818144040"
       AWS_REGION: "us-east-2"
-      APP_HANDLE: "frontend"
       ECR_REPOSITORY: "frontend"
     
     steps:
@@ -50,6 +48,68 @@ jobs:
         run: |
           docker push $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:${{ env.VERSION }}
           docker push $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:latest
+
+  build-backend:
+    runs-on: ubuntu-latest
+    
+    env:
+      MAJOR_VERSION: "1"
+      AWS_REGION: "us-east-2"
+      ECR_REPOSITORY: "backend"
+    
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+      
+      - name: Get version number
+        run: |
+          VERSION="${{ env.MAJOR_VERSION }}.${{ github.run_number }}"
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+        
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+      
+      - name: Build Docker image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          docker build -f backend/Dockerfile \
+            -t $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:${{ env.VERSION }} \
+            -t $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:latest \
+            .
+      
+      - name: Push to Amazon ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          docker push $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:${{ env.VERSION }}
+          docker push $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:latest
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [build-frontend, build-backend]
+    
+    env:
+      AWS_REGION: "us-east-2"
+    
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
       
       - name: Get ECR password for Aptible
         id: ecr-password
@@ -64,7 +124,7 @@ jobs:
           terraform_version: "1.6.0"
       
       - name: Terraform Init
-        run: terraform init -backend-config="key=terraform-frontend.tfstate"
+        run: terraform init -backend-config="key=terraform-main.tfstate"
         env:
           APTIBLE_USERNAME: ${{ secrets.APTIBLE_USERNAME }}
           APTIBLE_PASSWORD: ${{ secrets.APTIBLE_PASSWORD }}
@@ -74,9 +134,7 @@ jobs:
           terraform plan \
             -var="ecr_password=${{ steps.ecr-password.outputs.ecr_password }}" \
             -var="aptible_org_id=${{ secrets.APTIBLE_ORG_ID }}" \
-            -var="app_handle=${{ env.APP_HANDLE }}" \
-            -var="ecr_repository=${{ env.ECR_REPOSITORY }}" \
-            -var="aws_account_id=${{ env.AWS_ACCOUNT_ID }}" \
+            -var="aws_account_id=${{ secrets.AWS_ACCOUNT_ID }}" \
             -var="aws_region=${{ env.AWS_REGION }}"
         env:
           APTIBLE_USERNAME: ${{ secrets.APTIBLE_USERNAME }}
@@ -87,9 +145,7 @@ jobs:
           terraform apply -auto-approve \
             -var="ecr_password=${{ steps.ecr-password.outputs.ecr_password }}" \
             -var="aptible_org_id=${{ secrets.APTIBLE_ORG_ID }}" \
-            -var="app_handle=${{ env.APP_HANDLE }}" \
-            -var="ecr_repository=${{ env.ECR_REPOSITORY }}" \
-            -var="aws_account_id=${{ env.AWS_ACCOUNT_ID }}" \
+            -var="aws_account_id=${{ secrets.AWS_ACCOUNT_ID }}" \
             -var="aws_region=${{ env.AWS_REGION }}"
         env:
           APTIBLE_USERNAME: ${{ secrets.APTIBLE_USERNAME }}

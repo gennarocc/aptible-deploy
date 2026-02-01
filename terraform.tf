@@ -36,16 +36,6 @@ variable "aptible_org_id" {
   type        = string
 }
 
-variable "app_handle" {
-  description = "App handle (frontend)"
-  type        = string
-}
-
-variable "ecr_repository" {
-  description = "ECR repository name"
-  type        = string
-}
-
 variable "aws_account_id" {
   description = "AWS Account ID"
   type        = string
