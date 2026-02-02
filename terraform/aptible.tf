@@ -58,16 +58,6 @@ resource "aptible_app" "backend" {
 #   version        = "5.0"
 # }
 
-# PostgreSQL Database
-resource "aptible_database" "postgresql" {
-  env_id         = aptible_environment.main.env_id
-  handle         = "postgresql"
-  database_type  = "postgresql"
-  container_size = 1024
-  disk_size      = 10
-  version        = "12"
-}
-
 # Frontend Endpoint
 # resource "aptible_endpoint" "frontend" {
 #   env_id         = aptible_environment.main.env_id
@@ -97,4 +87,5 @@ resource "aptible_database" "postgresql" {
 #   
 #   depends_on = [aptible_app.backend]
 # }
+
 
