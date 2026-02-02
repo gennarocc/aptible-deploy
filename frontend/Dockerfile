@@ -1,2 +1,2 @@
 FROM alpine:latest
-CMD ["echo", "Hello World"]
+CMD ["sh", "-c", "while true; do echo 'Hello World'; sleep 60; done"]
