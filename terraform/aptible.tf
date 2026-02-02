@@ -79,6 +79,8 @@ resource "aptible_endpoint" "frontend" {
   resource_id    = aptible_app.frontend.app_id
   resource_type  = "app"
   ip_filtering   = []
+  
+  depends_on = [aptible_app.frontend]
 }
 
 # Backend Endpoint
@@ -92,4 +94,6 @@ resource "aptible_endpoint" "frontend" {
 #   resource_id    = aptible_app.backend.app_id
 #   resource_type  = "app"
 #   ip_filtering   = []
+#   
+#   depends_on = [aptible_app.backend]
 # }
