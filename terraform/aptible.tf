@@ -59,29 +59,29 @@ resource "aptible_app" "backend" {
 # }
 
 # PostgreSQL Database
-# resource "aptible_database" "postgresql" {
-#   env_id         = aptible_environment.main.env_id
-#   handle         = "postgresql"
-#   database_type  = "postgresql"
-#   container_size = 1024
-#   disk_size      = 10
-#   version        = "12"
-# }
+resource "aptible_database" "postgresql" {
+  env_id         = aptible_environment.main.env_id
+  handle         = "postgresql"
+  database_type  = "postgresql"
+  container_size = 1024
+  disk_size      = 10
+  version        = "12"
+}
 
 # Frontend Endpoint
-resource "aptible_endpoint" "frontend" {
-  env_id         = aptible_environment.main.env_id
-  default_domain = true
-  internal       = false
-  platform       = "alb"
-  process_type   = "cmd"
-  endpoint_type  = "https"
-  resource_id    = aptible_app.frontend.app_id
-  resource_type  = "app"
-  ip_filtering   = []
-  
-  depends_on = [aptible_app.frontend]
-}
+# resource "aptible_endpoint" "frontend" {
+#   env_id         = aptible_environment.main.env_id
+#   default_domain = true
+#   internal       = false
+#   platform       = "alb"
+#   process_type   = "cmd"
+#   endpoint_type  = "https"
+#   resource_id    = aptible_app.frontend.app_id
+#   resource_type  = "app"
+#   ip_filtering   = []
+#   
+#   depends_on = [aptible_app.frontend]
+# }
 
 # Backend Endpoint
 # resource "aptible_endpoint" "backend" {
@@ -97,3 +97,4 @@ resource "aptible_endpoint" "frontend" {
 #   
 #   depends_on = [aptible_app.backend]
 # }
+
