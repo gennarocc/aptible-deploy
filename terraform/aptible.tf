@@ -59,19 +59,19 @@ resource "aptible_app" "backend" {
 # }
 
 # Frontend Endpoint
-# resource "aptible_endpoint" "frontend" {
-#   env_id         = aptible_environment.main.env_id
-#   default_domain = true
-#   internal       = false
-#   platform       = "alb"
-#   process_type   = "cmd"
-#   endpoint_type  = "https"
-#   resource_id    = aptible_app.frontend.app_id
-#   resource_type  = "app"
-#   ip_filtering   = []
-#   
-#   depends_on = [aptible_app.frontend]
-# }
+resource "aptible_endpoint" "frontend" {
+  env_id         = aptible_environment.main.env_id
+  default_domain = true
+  internal       = false
+  platform       = "alb"
+  process_type   = "cmd"
+  endpoint_type  = "https"
+  resource_id    = aptible_app.frontend.app_id
+  resource_type  = "app"
+  ip_filtering   = []
+  
+  depends_on = [aptible_app.frontend]
+}
 
 # Backend Endpoint
 # resource "aptible_endpoint" "backend" {
@@ -87,5 +87,6 @@ resource "aptible_app" "backend" {
 #   
 #   depends_on = [aptible_app.backend]
 # }
+
 
 
